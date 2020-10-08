@@ -18,12 +18,10 @@ class Home extends Component {
         this.state = {
             data_6hr: [],
             data_28day: [],
-            dosesPerRecipient: '',
-            numRecipients: '',
-            numLocations: '',
-            numDays: '',
+            numDosesAdministered: '50000',
+            numLocations: '200',
+            numDays: '10',
             meanDosesAdministered: null,
-            numDosesAdministered: null,
             numSessions: null,
             expected_wastage: null
 
@@ -57,12 +55,12 @@ class Home extends Component {
     calculateParams = () => {
         //console.log('calculateParams called');
         const numSessions = this.state.numDays * this.state.numLocations;
-        const numDosesAdministered = this.state.numRecipients * this.state.dosesPerRecipient;
-        const meanDosesAdministered = numDosesAdministered / numSessions;
+        //const numDosesAdministered = this.state.numRecipients * this.state.dosesPerRecipient;
+        const meanDosesAdministered = this.state.numDosesAdministered / numSessions;
 
         this.setState({
             numSessions,
-            numDosesAdministered,
+            //numDosesAdministered,
             meanDosesAdministered
         }, () => {
             if (['numSessions', 'numDosesAdministered', 'meanDosesAdministered'].every(key => this.state[key] && isFinite(this.state[key]))) {
@@ -136,64 +134,52 @@ class Home extends Component {
             return;       
         }
 
+        const fieldsArray = ['expected_wastage', 'forecast_need'];
         const discardPeriods = ['6hr', '28day'];
-        const fieldsArray = ['expected_wastage', 'mean_doses_wasted', 'mean_doses_consumed'];
         const dosesPerVialsArray = [2, 5, 10, 20];
         const JSX_array = [];
-        for (let discardPeriod of discardPeriods) {
-            for (let i=0; i<fieldsArray.length; i++) {
-                let field = fieldsArray[i];
-                const exp_wastage_cells = dosesPerVialsArray.map(dosesPerVial => {
+        for (let i=0; i<fieldsArray.length; i++) {
+            let field = fieldsArray[i];
+            const exp_wastage_cells = [];
+            for (let discardPeriod of discardPeriods) {
+                dosesPerVialsArray.forEach(dosesPerVial => {
                     const exp_wastage_val = this.state.expected_wastage[discardPeriod][dosesPerVial];
                     const exp_wastage_pc = 100 * exp_wastage_val;
-                    const mean_doses_wasted = this.state.meanDosesAdministered * exp_wastage_val / (1 - exp_wastage_val);
-                    const mean_doses_consumed = this.state.meanDosesAdministered + mean_doses_wasted;
+                    const forecast_need = Math.ceil((this.state.numDosesAdministered / (1 - exp_wastage_val)) / dosesPerVial);
                     const keyVal = Math.random();
+                    let jsx;
                     switch(field) {
                         case 'expected_wastage':
-                            return <td key={keyVal}>{isNaN(exp_wastage_pc) ? '-' : exp_wastage_pc.toFixed(1) + '%'}</td>
-                        case 'mean_doses_wasted':
-                            return <td key={keyVal}>{isNaN(mean_doses_wasted) ? '-' : mean_doses_wasted.toFixed(2)}</td>
-                        case 'mean_doses_consumed':
-                            return <td key={keyVal}>{isNaN(mean_doses_consumed) ? '-' : mean_doses_consumed.toFixed(2)}</td>
+                            jsx = <td key={keyVal}>{isNaN(exp_wastage_pc) ? '-' : exp_wastage_pc.toFixed(1) + '%'}</td>
+                            break;
+                        case 'forecast_need':
+                            jsx = <td key={keyVal}>{isNaN(forecast_need) ? '-' : forecast_need.toFixed(0)}</td>
+                            break;
                         default:
-                            return <td key={keyVal}>ValueError({field})</td>
+                            jsx = <td key={keyVal}>ValueError({field})</td>
+                            break;
                     }
+                    exp_wastage_cells.push(jsx);
                 });
-                let fieldText;
-                switch(field) {
-                    case 'expected_wastage':
-                        fieldText = 'Expected wastage';
-                        break;
-                    case 'mean_doses_wasted':
-                        fieldText = 'Mean doses wasted';
-                        break;
-                    case 'mean_doses_consumed':
-                        fieldText = 'Mean doses consumed';
-                        break;
-                    default:
-                        break;
-                }
-                let rowJSX;
-                if (i === 0) {
-                    rowJSX = (
-                        <tr key={discardPeriod + ' ' + field}>
-                            <td rowSpan="3">{discardPeriod === '6hr' ? '6 hours' : '28 days'}</td>
-                            <td>{fieldText}</td>
-                            { exp_wastage_cells }
-                        </tr>
-                    );
-                }
-                else {
-                    rowJSX = (
-                        <tr key={discardPeriod + ' ' + field}>
-                            <td>{fieldText}</td>
-                            { exp_wastage_cells }
-                        </tr>
-                    );       
-                } 
-                JSX_array.push(rowJSX)               
             }
+            let fieldText;
+            switch(field) {
+                case 'expected_wastage':
+                    fieldText = 'Expected Wastage';
+                    break;
+                case 'forecast_need':
+                    fieldText = 'Forecast Need (vials)';
+                    break;
+                default:
+                    break;
+            }
+            const rowJSX = (
+                <tr key={field}>
+                    <td>{fieldText}</td>
+                    { exp_wastage_cells }
+                </tr>
+            );
+            JSX_array.push(rowJSX)               
         }
         return JSX_array;
     }
@@ -212,8 +198,12 @@ class Home extends Component {
             <table>
                 <tbody>
                     <tr>
-                        <th rowSpan="2">Discard after</th>
-                        <th rowSpan="2">Variable</th>
+                        <th rowSpan="3">Variable</th>
+                        <th colSpan="4">6 hours</th>
+                        <th colSpan="4">28 days</th>
+                    </tr>
+                    <tr>
+                        <th colSpan="4">Doses per vial</th>
                         <th colSpan="4">Doses per vial</th>
                     </tr>
                     <tr>
@@ -221,6 +211,10 @@ class Home extends Component {
                         <th>5</th>
                         <th>10</th>
                         <th>20</th>
+                        <th>2</th>
+                        <th>5</th>
+                        <th>10</th>
+                        <th>20</th>                        
                     </tr>                            
                     { this.renderResults() }
                 </tbody>
@@ -234,23 +228,18 @@ class Home extends Component {
                 <form className="input-form">
                     <div className="form-controls-grid-container">
                         <h3 className="grid-title">Vaccine & Campaign inputs</h3> 
-                        <div className="grid-input-cell-1">
-                            <label htmlFor="numRecipients">Number of recipients</label>
-                            <input type="text" name="numRecipients" id="numRecipients" placeholder="e.g. 25000"
-                                                        value={this.state.numRecipients} onChange={this.handleInputChange} />
-                        </div>    
-                        <div className="grid-input-cell-2"> 
-                            <label htmlFor="dosesPerRecipient">Doses per recipient</label>
-                            <input type="text" name="dosesPerRecipient" id="dosesPerRecipient" placeholder="e.g. 2"
-                                                        value={this.state.dosesPerRecipient} onChange={this.handleInputChange} />
-                        </div>    
+                        <div className="grid-input-numDosesAdministered">
+                            <label htmlFor="numDosesAdministered">Number of doses administered</label>
+                            <input type="text" name="numDosesAdministered" id="numDosesAdministered" placeholder="e.g. 50000"
+                                                        value={this.state.numDosesAdministered} onChange={this.handleInputChange} />
+                        </div>       
 
-                        <div className="grid-input-cell-3"> 
+                        <div className="grid-input-numLocations"> 
                             <label htmlFor="numLocations">Number of vaccination locations (or teams)</label>
                             <input type="text" name="numLocations" id="numLocations" placeholder="e.g. 200"
                                                         value={this.state.numLocations} onChange={this.handleInputChange} />
                         </div>   
-                        <div className="grid-input-cell-4">     
+                        <div className="grid-input-numDays">     
                             <label htmlFor="numDays">Number of days</label>
                             <input type="text" name="numDays" id="numDays" placeholder="e.g. 10"
                                                     value={this.state.numDays} onChange={this.handleInputChange} />                                                                        
@@ -265,10 +254,6 @@ class Home extends Component {
                                 <tr>
                                     <td width="70%">Number of sessions:</td>
                                     <td>{ this.state.numSessions && this.state.numSessions }</td>
-                                </tr>
-                                <tr>
-                                    <td width="70%">Number of doses administered:</td>
-                                    <td>{ this.state.numDosesAdministered && this.state.numDosesAdministered }</td>
                                 </tr>
                                 <tr>
                                     <td width="70%">Mean doses administered:</td>

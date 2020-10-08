@@ -8,7 +8,7 @@
 }
 
 .input-form, .results-container {   
-    min-height: 500px;
+    min-height: 400px;
     margin: 30px 20px;
     padding: 15px 10px;
     background-color: #f4f8fc;
@@ -35,24 +35,22 @@
     margin: 0 auto;
 }
 
-.grid-title         { grid-area: title; }
-.grid-input-cell-1  { grid-area: input1; }
-.grid-input-cell-2  { grid-area: input2; }
-.grid-input-cell-3  { grid-area: input3; }
-.grid-input-cell-4  { grid-area: input4; }
+.grid-title                         { grid-area: title; }
+.grid-input-numDosesAdministered    { grid-area: input1; }
+.grid-input-numLocations            { grid-area: input2; }
+.grid-input-numDays                 { grid-area: input3; }
 
 .form-controls-grid-container {
     display: grid;
     grid-template-columns: 1fr;
-    grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr 1fr;
     grid-column-gap: 30px;
     grid-row-gap: 10px;
     grid-template-areas:
         "title"
         "input1"
         "input2"
-        "input3" 
-        "input4";
+        "input3";
 }
 
 
