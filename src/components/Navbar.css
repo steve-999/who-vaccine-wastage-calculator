@@ -1,0 +1,16 @@
+
+.navbar-container {
+    height: 80px;
+    background-color: #01579b;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.logo {
+    color: white;
+    font-family: 'Raleway', sans-serif;
+    font-weight: 600;
+    font-size: 19px;
+}
