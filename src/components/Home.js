@@ -10,6 +10,12 @@ function IsNumeric(input)
     return (input - 0) == input && (''+input).trim().length > 0;
 }
 
+// function objectsAreEqual(a, b) {
+//     if (Object.keys(a) !== Object.keys(b))
+//         return false;
+//     return Object.keys(a).every(key => a[key] === b[key]);
+// }
+
 class Home extends Component {
 
     constructor(props) {
@@ -18,14 +24,19 @@ class Home extends Component {
         this.state = {
             data_6hr: [],
             data_28day: [],
-            numDosesAdministered: '50000',
-            numLocations: '200',
-            numDays: '10',
+            numDosesAdministered: '',      // 50000
+            numLocations: '',                // 200
+            numDays: '',                      // 10
+            closedVialWastage: 1,
+            numStorageLevels: 3,
+            closedVialWastageCheckbox: false,
+            openedVialWastage: 5,
+            openedVialWastageCheckbox: false,
             meanDosesAdministered: null,
             numSessions: null,
             expected_wastage: null
-
         }
+        this.handleInputChange = this.handleInputChange.bind(this);
     }
 
     componentDidMount() {
@@ -33,16 +44,17 @@ class Home extends Component {
         d3.csv(data_28d_file).then(data => this.setState({data_28day: data}));
     }
 
-    handleInputChange = (e) => {
+    handleInputChange(e) {
         //console.log('handleInputChange', e.target.name, e.target.value);
         const name = e.target.name;
-        const value = e.target.value;
+        //const value = e.target.value;
+        const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
 
-        // if(localStorage) {
-        //     localStorage.setItem(name, value);
-        // }
+        if(localStorage) {
+            localStorage.setItem(name, value);
+        }
 
-        if (value.length > 0 && !IsNumeric(value)) {
+        if (!name.includes('Checkbox') && value.length > 0 && !IsNumeric(value)) {
             alert('Input values must be numeric');
             return;
         }
@@ -55,12 +67,10 @@ class Home extends Component {
     calculateParams = () => {
         //console.log('calculateParams called');
         const numSessions = this.state.numDays * this.state.numLocations;
-        //const numDosesAdministered = this.state.numRecipients * this.state.dosesPerRecipient;
         const meanDosesAdministered = this.state.numDosesAdministered / numSessions;
 
         this.setState({
             numSessions,
-            //numDosesAdministered,
             meanDosesAdministered
         }, () => {
             if (['numSessions', 'numDosesAdministered', 'meanDosesAdministered'].every(key => this.state[key] && isFinite(this.state[key]))) {
@@ -89,9 +99,33 @@ class Home extends Component {
         const mean_doses1 = data_array[idx]['mean doses per period']
         const mean_doses2 = data_array[idx+1]['mean doses per period']
         const calculated_mean_doses = this.state.meanDosesAdministered;
-        const expected_wastage = parseFloat(exp_wastage1) 
+        let expected_wastage = parseFloat(exp_wastage1) 
                                + parseFloat((calculated_mean_doses - mean_doses1) / (mean_doses2 - mean_doses1)) 
                                * parseFloat(exp_wastage2 - exp_wastage1);
+
+        console.log('expected_wastage before', expected_wastage);
+
+        const Wc = this.state.closedVialWastageCheckbox ? this.state.closedVialWastage / 100 : 0;
+        const n  = this.state.closedVialWastageCheckbox ? this.state.numStorageLevels : 0;
+        const Wo = this.state.openedVialWastageCheckbox ? this.state.openedVialWastage / 100 : 0;
+
+        // console.log('this.state.closedVialWastageCheckbox', this.state.closedVialWastageCheckbox)
+        // console.log('this.state.openedVialWastageCheckbox', this.state.openedVialWastageCheckbox)
+        // console.log('Wc', Wc)
+        // console.log('n', n)
+        // console.log('Wo', Wo)
+        // console.log('((1 - Wc) ** n) = ', ((1 - Wc) ** n))
+        // console.log('(1 - Wo) = ', (1 - Wo))
+        console.log('1 - ((1 - Wc) ** n) * (1 - Wo) = ', 1 - ((1 - Wc) ** n) * (1 - Wo));
+
+        expected_wastage = 1 - (1 - expected_wastage) * ((1 - Wc) ** n) * (1 - Wo);
+
+        if (expected_wastage > 1.0)
+            expected_wastage = 1.0;
+
+        console.log('expected_wastage after', expected_wastage);
+        console.log('');
+
         // console.log('exp_wastage1', exp_wastage1);
         // console.log('exp_wastage2', exp_wastage2);
         // console.log('mean_doses1', mean_doses1);
@@ -121,7 +155,7 @@ class Home extends Component {
         
         this.setState({
             expected_wastage: expected_wastage_obj
-        });
+        }, () => console.log('expected_wastage', this.state.expected_wastage));
     }
 
     renderResults = () => {
@@ -226,26 +260,87 @@ class Home extends Component {
         return (
             <div className="home-container">
                 <form className="input-form">
-                    <div className="form-controls-grid-container">
-                        <h3 className="grid-title">Vaccine & Campaign inputs</h3> 
-                        <div className="grid-input-numDosesAdministered">
+                    <h3 className="input-form-title">Vaccine & Campaign inputs</h3> 
+
+                    <div className="form-controls-grid-container">                        
+
+                        <div className="grid-numDosesAdministered">
                             <label htmlFor="numDosesAdministered">Number of doses administered</label>
-                            <input type="text" name="numDosesAdministered" id="numDosesAdministered" placeholder="e.g. 50000"
-                                                        value={this.state.numDosesAdministered} onChange={this.handleInputChange} />
+                            <input type="text" name="numDosesAdministered" id="numDosesAdministered" 
+                                    ref={this.refNumDosesAdministered} placeholder="e.g. 50000"
+                                    value={this.state.numDosesAdministered} onChange={this.handleInputChange} />
                         </div>       
 
-                        <div className="grid-input-numLocations"> 
+                        <div className="grid-numLocations"> 
                             <label htmlFor="numLocations">Number of vaccination locations (or teams)</label>
                             <input type="text" name="numLocations" id="numLocations" placeholder="e.g. 200"
                                                         value={this.state.numLocations} onChange={this.handleInputChange} />
                         </div>   
-                        <div className="grid-input-numDays">     
+
+                        <div className="grid-numDays">     
                             <label htmlFor="numDays">Number of days</label>
                             <input type="text" name="numDays" id="numDays" placeholder="e.g. 10"
                                                     value={this.state.numDays} onChange={this.handleInputChange} />                                                                        
                         </div>  
+
+                        {/* ====================================================================================== */}
+
+                        <div className="grid-closedVialWastage-container">
+                            <div className="grid-closedVialWastageCheckbox">     
+                                <label htmlFor="closedVialWastageCheckbox">
+                                    <input type="checkbox" name="closedVialWastageCheckbox" id="closedVialWastageCheckbox" 
+                                            value={this.state.closedVialWastageCheckbox} onChange={this.handleInputChange} />                         
+                                    &nbsp;Include closed vial wastage?
+                                </label>                                                                       
+                            </div>  
+                            
+                            <div className="grid-closedVialWastageInputTextLabel">   
+                                <label className="grid-closedVialWastageInputTextLabel" 
+                                        htmlFor="closedVialWastage">Closed vial wastage (%)</label>
+                            </div>
+                            <div  className="grid-closedVialWastageInputText">
+                                <input type="text" name="closedVialWastage" id="closedVialWastage" placeholder="e.g. 1"
+                                       value={this.state.closedVialWastage} onChange={this.handleInputChange}
+                                       disabled={!this.state.closedVialWastageCheckbox} />   
+                            </div>                                                                    
+                                                    
+                            <div className="grid-numStorageLevelsLabels">     
+                                <label className="grid-numStorageLevelsLabel" 
+                                        htmlFor="numStorageLevels">Number of storage levels</label>
+                            </div>
+                            <div className="grid-numStorageLevels"> 
+                                <input type="text" name="numStorageLevels" id="numStorageLevels" placeholder="e.g. 3"
+                                       value={this.state.numStorageLevels} onChange={this.handleInputChange}
+                                       disabled={!this.state.closedVialWastageCheckbox} />                                                                        
+                            </div>  
+                        </div>                                              
+
+                        {/* ====================================================================================== */}
+
+                        <div className="grid-openedVialWastage-container">
+                            <div className="grid-openedVialWastageCheckbox">     
+                                <label htmlFor="openedVialWastageCheckbox">
+                                    <input type="checkbox" name="openedVialWastageCheckbox" id="openedVialWastageCheckbox" 
+                                            value={this.state.openedVialWastageCheckbox} onChange={this.handleInputChange} />                         
+                                    &nbsp;Include avoidable opened vial wastage?
+                                </label>                                                                       
+                            </div>   
+
+                            <div className="grid-openedVialWastageInputTextLabel">     
+                                <label className="grid-openedVialWastageInputTextLabel" 
+                                         htmlFor="openedVialWastage">Avoidable opened vial wastage (%)</label>
+                            </div>
+                            <div className="grid-openedVialWastageInputText">
+                                <input type="text" name="openedVialWastage" id="openedVialWastage" placeholder="e.g. 5"
+                                       value={this.state.openedVialWastage} onChange={this.handleInputChange}
+                                       disabled={!this.state.openedVialWastageCheckbox} />                                                                        
+                            </div> 
+                        </div>  
+
                     </div>                                         
                 </form>
+
+                {/* =========================================================================================================== */}
 
                 <div className="results-container">
                     <div className="calculated-params-container">
@@ -263,8 +358,6 @@ class Home extends Component {
                             </tbody>
                         </table>
                     </div>
-
-                    <br/>
 
                     { this.renderResultsTable() }
                 </div>

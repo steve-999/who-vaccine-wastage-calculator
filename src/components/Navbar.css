@@ -14,3 +14,11 @@
     font-weight: 600;
     font-size: 19px;
 }
+
+@media screen and (max-width: 767px) {
+    /* medium tablet styles */
+
+    .logo {
+        font-size: 17px;
+    }
+}

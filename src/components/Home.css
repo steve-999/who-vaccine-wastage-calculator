@@ -8,22 +8,22 @@
 }
 
 .input-form, .results-container {   
-    min-height: 400px;
-    margin: 30px 20px;
-    padding: 15px 10px;
+    min-height: 550px;
+    margin: 20px 20px;
+    padding: 15px 20px;
     background-color: #f4f8fc;
     border: 1px solid #afafc5;
     border-radius: 10px;
 }
 
 .input-form {
-    width: 25%; 
-    max-width: 400px;
+    width: 50%; 
+    max-width: 600px;
 }
 
 .results-container {
-    width: 70%; 
-    max-width: 800px;
+    width: 50%; 
+    max-width: 600px;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -35,25 +35,65 @@
     margin: 0 auto;
 }
 
-.grid-title                         { grid-area: title; }
-.grid-input-numDosesAdministered    { grid-area: input1; }
-.grid-input-numLocations            { grid-area: input2; }
-.grid-input-numDays                 { grid-area: input3; }
+.grid-numDosesAdministered        { grid-area: numDosesAdministered; }
+.grid-numLocations                { grid-area: numLocations; }
+.grid-numDays                     { grid-area: numDays; }
+.grid-closedVialWastage-container { grid-area: closedVialWastage-container; }
+.grid-openedVialWastage-container { grid-area: openedVialWastage-container; }
 
 .form-controls-grid-container {
     display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr 1fr 1fr 1fr;
-    grid-column-gap: 30px;
-    grid-row-gap: 10px;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: repeat(3, 75px) 225px;
+    column-gap: 15px;
+    row-gap: 3px;
     grid-template-areas:
-        "title"
-        "input1"
-        "input2"
-        "input3";
+        "numDosesAdministered numDosesAdministered"
+        "numLocations numLocations"
+        "numDays numDays"
+        "closedVialWastage-container openedVialWastage-container";
 }
 
+.grid-closedVialWastageCheckbox       { grid-area: closedVialWastageCheckbox; }
+.grid-closedVialWastageInputTextLabel { grid-area: closedVialWastageInputTextLabel; }
+.grid-closedVialWastageInputText      { grid-area: closedVialWastageInputText;  }
+.grid-numStorageLevelsLabel           { grid-area: numStorageLevelsLabel; }
+.grid-numStorageLevels                { grid-area: numStorageLevels;  }
+.grid-openedVialWastageCheckbox       { grid-area: openedVialWastageCheckbox;  }
+.grid-openedVialWastageInputTextLabel { grid-area: openedVialWastageInputTextLabel; }
+.grid-openedVialWastageInputText      { grid-area: openedVialWastageInputText;  }
 
+.grid-closedVialWastage-container, .grid-openedVialWastage-container {
+    border: 1px solid lightgrey;
+    border-radius: 7px;
+    padding: 15px;
+    margin: 10px 0;
+    height: 230px;
+
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 50px 45px 40px 45px 40px;
+    column-gap: 15px;
+    row-gap: 3px;
+}
+
+.grid-closedVialWastage-container {
+    grid-template-areas:
+        "closedVialWastageCheckbox"
+        "closedVialWastageInputTextLabel"
+        "closedVialWastageInputText"
+        "numStorageLevelsLabel"
+        "numStorageLevels";
+}
+
+.grid-openedVialWastage-container {
+    grid-template-areas:
+        "openedVialWastageCheckbox"
+        "openedVialWastageInputTextLabel"
+        "openedVialWastageInputText"
+        "."
+        ".";
+}
 
 h3 {
     text-align: center;
@@ -77,19 +117,28 @@ input[type="text"] {
     border: 1px solid lightgrey;
 }
 
+input[type="text"]::placeholder {
+    color: #aaa;
+}
+
 input[type="text"]:focus {
     outline: 1px solid grey;
     background-color: white;
 }
 
-/* input:-internal-autofill-selected {
-    background-color: white !important;;
-} */
+input[type="text"]:disabled {
+    background-color: #ddd;
+    color: #aaa;
+  }
 
 label {
     display: block;
     width: 100%;
     padding: 11px 0;
+}
+
+input[type="checkbox"] {  
+    display: inline;
 }
 
 li {
@@ -110,7 +159,7 @@ td, th {
 
 th {
     color: #004174;
-    background-color: #ffffa6;
+    background-color: #fff099;
     vertical-align: top;
 }
 
@@ -118,12 +167,130 @@ td {
     background-color: #b3ffb3;
 }
 
-/* table.calculated-params-table {
-    border: 1px solid grey;
-} */
+.input-form-title {
+    margin: 10px auto;
+}
 
 .calculated-params-table td {
     background-color: #f4f8fc;
     text-align: right;
     /* border: 1px solid grey; */
+}
+
+/*******************************************************/
+
+@media screen and (max-width: 1100px) {
+    .grid-closedVialWastage-container label, .grid-openedVialWastage-container label {
+        font-size: 13px;
+    }
+
+    .input-form, .results-container  {
+        margin: 20px 10px;
+        padding: 15px 10px;
+    }
+}
+
+@media screen and (max-width: 991px) {
+    /* large tablet styles */
+    
+    .grid-closedVialWastage-container label, .grid-openedVialWastage-container label {
+        font-size: 12px;
+    }
+
+    .results-container table {
+        transform: scale(0.78);
+    }
+}
+
+@media screen and (max-width: 767px) {
+    /* medium tablet styles */
+    .home-container {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+    }
+
+    .form-controls-grid-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: repeat(2, 70px) 200px;
+        column-gap: 15px;
+        row-gap: 3px;
+        grid-template-areas:
+            "numDosesAdministered numLocations"
+            "numDays ."
+            "closedVialWastage-container openedVialWastage-container";
+    }
+
+    .input-form, .results-container {
+        width: 90%; 
+        max-width: 600px;
+        margin: 10px auto;
+        padding: 5px 10px;
+    }
+
+    .input-form {
+        min-height: 380px;
+        max-height: 380px;
+    }
+
+    input {
+        font-size: 13px;
+        line-height: 0.75;
+    }
+
+    .results-container {
+        min-height: 230px;
+        max-height: 230px;
+        margin-top: 5px;
+    }
+
+    .results-container table {
+        transform: scale(0.9);
+    }
+
+    .grid-closedVialWastage-container, .grid-openedVialWastage-container {
+        height: 180px;
+        padding: 5px 15px;
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-template-rows: 35px 30px 25px 30px 25px;
+        column-gap: 15px;
+        row-gap: 3px;
+    }
+
+    .input-form-title {
+        margin: 0px auto;
+    }
+
+    label {
+        padding: 8px 0;
+        font-size: 11.5px;
+    }
+
+    .results-container table {
+        width: 90%;
+    }
+
+    td, th {
+        font-size: 14px;
+        padding: 3px;
+    }
+
+    h3.input-form-title {
+        font-size: 17px;
+        margin-bottom: 8px;
+    }
+}
+
+@media screen and (max-width: 479px) {
+    /* mobile styles */
+
+}
+
+@media screen and (max-width: 359px) {
+    /* small-screen mobile styles */
+
 }
