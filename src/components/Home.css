@@ -10,7 +10,7 @@
 .input-form, .results-container {   
     min-height: 550px;
     margin: 20px 20px;
-    padding: 15px 20px;
+    padding: 15px 15px;
     background-color: #f4f8fc;
     border: 1px solid #afafc5;
     border-radius: 10px;
@@ -35,22 +35,28 @@
     margin: 0 auto;
 }
 
-.grid-numDosesAdministered        { grid-area: numDosesAdministered; }
-.grid-numLocations                { grid-area: numLocations; }
-.grid-numDays                     { grid-area: numDays; }
-.grid-closedVialWastage-container { grid-area: closedVialWastage-container; }
-.grid-openedVialWastage-container { grid-area: openedVialWastage-container; }
+.grid-numDosesAdministeredLabel     { grid-area: numDosesAdministeredLabel; }
+.grid-numDosesAdministeredInput     { grid-area: numDosesAdministeredInput; }
+.grid-numLocationsLabel             { grid-area: numLocationsLabel; }
+.grid-numLocationsInput             { grid-area: numLocationsInput; }
+.grid-numDaysLabel                  { grid-area: numDaysLabel; }
+.grid-numDaysInput                  { grid-area: numDaysInput; }
+.grid-closedVialWastage-container   { grid-area: closedVialWastage-container; }
+.grid-openedVialWastage-container   { grid-area: openedVialWastage-container; }
 
 .form-controls-grid-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: repeat(3, 75px) 225px;
+    grid-template-rows: repeat(3, 35px 40px) 225px;
     column-gap: 15px;
     row-gap: 3px;
     grid-template-areas:
-        "numDosesAdministered numDosesAdministered"
-        "numLocations numLocations"
-        "numDays numDays"
+        "numDosesAdministeredLabel numDosesAdministeredLabel"
+        "numDosesAdministeredInput numDosesAdministeredInput"
+        "numLocationsLabel numLocationsLabel"
+        "numLocationsInput numLocationsInput"
+        "numDaysLabel numDaysLabel"
+        "numDaysInput numDaysInput"
         "closedVialWastage-container openedVialWastage-container";
 }
 
@@ -112,6 +118,7 @@ select, input[type="text"] {
 }
 
 input[type="text"] {  
+    width: 100%;
     box-sizing: border-box;
     background-color: white;
     border: 1px solid lightgrey;
@@ -155,12 +162,14 @@ td, th {
     border-collapse: collapse;
     padding: 5px;
     text-align: center;
+    font-size: 15px;
 }
 
 th {
     color: #004174;
     background-color: #fff099;
     vertical-align: top;
+    font-weight: 600;
 }
 
 td {
@@ -171,17 +180,25 @@ td {
     margin: 10px auto;
 }
 
+.calculated-params-table {
+    margin-bottom: 40px;
+}
+
 .calculated-params-table td {
     background-color: #f4f8fc;
     text-align: right;
-    /* border: 1px solid grey; */
+}
+
+.results-table {
+    width: 90%;
+    margin: 0;
 }
 
 /*******************************************************/
 
 @media screen and (max-width: 1100px) {
     .grid-closedVialWastage-container label, .grid-openedVialWastage-container label {
-        font-size: 13px;
+        font-size: 15px; 
     }
 
     .input-form, .results-container  {
@@ -192,13 +209,15 @@ td {
 
 @media screen and (max-width: 991px) {
     /* large tablet styles */
-    
+
     .grid-closedVialWastage-container label, .grid-openedVialWastage-container label {
-        font-size: 12px;
+        font-size: 13px;
     }
 
-    .results-container table {
-        transform: scale(0.78);
+    .results-table td, .results-table th {
+        /* transform: scale(0.78); */
+        padding: 3px;
+        font-size: 13px;
     }
 }
 
@@ -213,14 +232,16 @@ td {
     }
 
     .form-controls-grid-container {
-        display: grid;
         grid-template-columns: 1fr 1fr;
-        grid-template-rows: repeat(2, 70px) 200px;
+        /* grid-template-rows: repeat(4, 35px) 225px; */
+        grid-template-rows: 35px 30px 25px 30px 225px;
         column-gap: 15px;
         row-gap: 3px;
         grid-template-areas:
-            "numDosesAdministered numLocations"
-            "numDays ."
+            "numDosesAdministeredLabel numLocationsLabel"
+            "numDosesAdministeredInput numLocationsInput"
+            "numDaysLabel ."
+            "numDaysInput ."
             "closedVialWastage-container openedVialWastage-container";
     }
 
@@ -232,8 +253,8 @@ td {
     }
 
     .input-form {
-        min-height: 380px;
-        max-height: 380px;
+        min-height: 370px;
+        max-height: 370px;
     }
 
     input {
@@ -242,21 +263,21 @@ td {
     }
 
     .results-container {
-        min-height: 230px;
-        max-height: 230px;
+        min-height: 240px;
+        max-height: 240px;
         margin-top: 5px;
     }
 
-    .results-container table {
+    /* .results-container table {
         transform: scale(0.9);
-    }
+    } */
 
     .grid-closedVialWastage-container, .grid-openedVialWastage-container {
         height: 180px;
         padding: 5px 15px;
         display: grid;
         grid-template-columns: 1fr;
-        grid-template-rows: 35px 30px 25px 30px 25px;
+        grid-template-rows: 37px 32px 30px 32px 30px;
         column-gap: 15px;
         row-gap: 3px;
     }
@@ -267,7 +288,7 @@ td {
 
     label {
         padding: 8px 0;
-        font-size: 11.5px;
+        font-size: 13px;
     }
 
     .results-container table {
@@ -283,14 +304,63 @@ td {
         font-size: 17px;
         margin-bottom: 8px;
     }
+
+    .calculated-params-table {
+        margin-bottom: 10px;
+    }
 }
 
 @media screen and (max-width: 479px) {
     /* mobile styles */
+    .form-controls-grid-container {
+        grid-template-rows: 35px 30px 20px 25px 225px;
+    }
 
+    .form-controls-grid-container label {
+        font-size: 13px;
+        padding: 6px 0;
+    }
+
+    input[type="text"] {
+        padding: 3px;
+    }
+
+    .results-container {
+        margin: 0px;
+        padding: 5px;
+    }
+
+    .calculated-params-table th, .calculated-params-table td {
+        font-size: 12px;
+    }
+
+    .results-table th, .results-table td {
+        font-size: 12px;
+        padding: 2.5px 2px;
+    }
+}
+
+@media screen and (max-width: 400px) {
+
+    .results-table th, .results-table td {
+        font-size: 11px;
+        padding: 2px 1.2px;
+    }
 }
 
 @media screen and (max-width: 359px) {
     /* small-screen mobile styles */
 
+    .grid-closedVialWastage-container label, .grid-openedVialWastage-container label {
+        font-size: 11px;
+    }
+
+    .calculated-params-table th, .calculated-params-table td {
+        font-size: 11px;
+    }
+
+    .results-table th, .results-table td {
+        font-size: 10.5px;
+        padding: 1.5px 0.25px;
+    }
 }

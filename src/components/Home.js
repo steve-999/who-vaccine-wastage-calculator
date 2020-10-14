@@ -3,18 +3,13 @@ import * as d3 from 'd3';
 import data_6h_file from '../data/expected_wastage_rate_6hour.csv';
 import data_28d_file from '../data/expected_wastage_rate_28day.csv';
 import './Home.css';
+//import _ from 'lodash';
 
 function IsNumeric(input)
 {
     // eslint-disable-next-line
     return (input - 0) == input && (''+input).trim().length > 0;
 }
-
-// function objectsAreEqual(a, b) {
-//     if (Object.keys(a) !== Object.keys(b))
-//         return false;
-//     return Object.keys(a).every(key => a[key] === b[key]);
-// }
 
 class Home extends Component {
 
@@ -36,19 +31,52 @@ class Home extends Component {
             numSessions: null,
             expected_wastage: null
         }
+        this.ref_numDosesAdministered = React.createRef();
+        this.ref_numLocations = React.createRef();
+        this.ref_numDays = React.createRef();
+        this.ref_closedVialWastageCheckbox = React.createRef();
+        this.ref_closedVialWastage = React.createRef();
+        this.ref_numStorageLevels = React.createRef();
+        this.ref_openedVialWastageCheckbox = React.createRef();
+        this.ref_openedVialWastage = React.createRef();
         this.handleInputChange = this.handleInputChange.bind(this);
     }
 
     componentDidMount() {
-        d3.csv(data_6h_file).then(data => this.setState({data_6hr: data}));
-        d3.csv(data_28d_file).then(data => this.setState({data_28day: data}));
+        d3.csv(data_6h_file).then(data => {
+            this.setState({data_6hr: data});
+            d3.csv(data_28d_file).then(data => {
+                this.setState({data_28day: data});
+                this.findExpectedWastage();
+            });
+        });
+        
+        const fieldsArray = ['numDosesAdministered', 'numLocations', 'numDays', 'closedVialWastage', 'numStorageLevels', 
+            'closedVialWastageCheckbox', 'openedVialWastage', 'openedVialWastageCheckbox'];
+        if(localStorage) {
+            for (let field of fieldsArray) {
+                let val = localStorage.getItem(field);
+                if(field.includes('Checkbox')) {
+                    this[`ref_${field}`].current.checked = val === 'true';
+                    this.setState({
+                        [field]: val === 'true'
+                    }, () => this.calculateParams());              
+                }
+                else {
+                    this[`ref_${field}`].current.value = val;
+                    this.setState({
+                        [field]: val
+                    }, () => this.calculateParams());                
+                }
+            }   
+        }
     }
 
     handleInputChange(e) {
-        //console.log('handleInputChange', e.target.name, e.target.value);
         const name = e.target.name;
         //const value = e.target.value;
         const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+        console.log('handleInputChange', name, value);
 
         if(localStorage) {
             localStorage.setItem(name, value);
@@ -65,21 +93,32 @@ class Home extends Component {
     }
 
     calculateParams = () => {
-        //console.log('calculateParams called');
-        const numSessions = this.state.numDays * this.state.numLocations;
+        // console.log('');
+        // console.log('calculateParams called');
+        const numSessions = Number(this.state.numDays) * Number(this.state.numLocations);
         const meanDosesAdministered = this.state.numDosesAdministered / numSessions;
+        
+        // console.log('numDays', this.state.numDays);
+        // console.log('numLocations', this.state.numLocations);
+        // console.log('numDosesAdministered', this.state.numDosesAdministered)
+        // console.log('numSessions', numSessions);
+        // console.log('meanDosesAdministered', meanDosesAdministered);
 
         this.setState({
             numSessions,
             meanDosesAdministered
         }, () => {
+            //console.log(this.state);
             if (['numSessions', 'numDosesAdministered', 'meanDosesAdministered'].every(key => this.state[key] && isFinite(this.state[key]))) {
                 this.findExpectedWastage();
+                //this.render();
             }
         });
     }
 
     findRowIndex(data_array) {
+        // console.log('in findRowIndex this.state.meanDosesAdministered = ', this.state.meanDosesAdministered);
+        // console.log('data_array', data_array);
         let idx = null;
         for (let i=0; i<data_array.length-1; i++) {
             if (data_array[i]['mean doses per period'] <= this.state.meanDosesAdministered
@@ -87,9 +126,7 @@ class Home extends Component {
                 idx = i;
             }
         }
-        // console.log('idx', idx);
-        // console.log(data_array[idx])
-        // console.log(data_array[idx+1])
+        //console.log('idx', idx);
         return idx;
     }
 
@@ -103,40 +140,21 @@ class Home extends Component {
                                + parseFloat((calculated_mean_doses - mean_doses1) / (mean_doses2 - mean_doses1)) 
                                * parseFloat(exp_wastage2 - exp_wastage1);
 
-        console.log('expected_wastage before', expected_wastage);
-
         const Wc = this.state.closedVialWastageCheckbox ? this.state.closedVialWastage / 100 : 0;
         const n  = this.state.closedVialWastageCheckbox ? this.state.numStorageLevels : 0;
         const Wo = this.state.openedVialWastageCheckbox ? this.state.openedVialWastage / 100 : 0;
-
-        // console.log('this.state.closedVialWastageCheckbox', this.state.closedVialWastageCheckbox)
-        // console.log('this.state.openedVialWastageCheckbox', this.state.openedVialWastageCheckbox)
-        // console.log('Wc', Wc)
-        // console.log('n', n)
-        // console.log('Wo', Wo)
-        // console.log('((1 - Wc) ** n) = ', ((1 - Wc) ** n))
-        // console.log('(1 - Wo) = ', (1 - Wo))
-        console.log('1 - ((1 - Wc) ** n) * (1 - Wo) = ', 1 - ((1 - Wc) ** n) * (1 - Wo));
 
         expected_wastage = 1 - (1 - expected_wastage) * ((1 - Wc) ** n) * (1 - Wo);
 
         if (expected_wastage > 1.0)
             expected_wastage = 1.0;
-
-        console.log('expected_wastage after', expected_wastage);
-        console.log('');
-
-        // console.log('exp_wastage1', exp_wastage1);
-        // console.log('exp_wastage2', exp_wastage2);
-        // console.log('mean_doses1', mean_doses1);
-        // console.log('mean_doses2', mean_doses2);
-        // console.log('calculated_mean_doses', calculated_mean_doses);
-        // console.log('exp_wastage2 - exp_wastage1', exp_wastage2 - exp_wastage1);
-        // console.log('expected_wastage', expected_wastage);
         return expected_wastage;
     }
 
     findExpectedWastage = () => {
+        // console.log('');
+        // console.log('in findExpectedWastage');
+        // console.log('this.state', this.state);
         const expected_wastage_obj = {
             '6hr': {},
             '28day': {}
@@ -229,7 +247,7 @@ class Home extends Component {
         }
 
         return (
-            <table>
+            <table className="results-table">
                 <tbody>
                     <tr>
                         <th rowSpan="3">Variable</th>
@@ -264,32 +282,45 @@ class Home extends Component {
 
                     <div className="form-controls-grid-container">                        
 
-                        <div className="grid-numDosesAdministered">
-                            <label htmlFor="numDosesAdministered">Number of doses administered</label>
+                        <div className="grid-numDosesAdministeredLabel">
+                            <label htmlFor="numDosesAdministered">
+                                Number of doses administered
+                            </label>
+                        </div>
+                        <div className="grid-numDosesAdministeredInput">
                             <input type="text" name="numDosesAdministered" id="numDosesAdministered" 
-                                    ref={this.refNumDosesAdministered} placeholder="e.g. 50000"
-                                    value={this.state.numDosesAdministered} onChange={this.handleInputChange} />
-                        </div>       
+                                    ref={this.ref_numDosesAdministered} 
+                                    placeholder="e.g. 50000" onChange={this.handleInputChange} />
+                        </div>
 
-                        <div className="grid-numLocations"> 
-                            <label htmlFor="numLocations">Number of vaccination locations (or teams)</label>
-                            <input type="text" name="numLocations" id="numLocations" placeholder="e.g. 200"
-                                                        value={this.state.numLocations} onChange={this.handleInputChange} />
-                        </div>   
+                        <div className="grid-numLocationsLabel">
+                            <label htmlFor="numLocations">
+                                Number of vaccination locations (or teams)
+                            </label>
+                        </div>
+                        <div className="grid-numLocationsInput">
+                            <input type="text" name="numLocations" id="numLocations" 
+                                    placeholder="e.g. 200" ref={this.ref_numLocations} onChange={this.handleInputChange} />
+                        </div>
 
-                        <div className="grid-numDays">     
+                        <div className="grid-numDaysLabel">
                             <label htmlFor="numDays">Number of days</label>
+                        </div> 
+                        <div className="grid-numDaysInput">
                             <input type="text" name="numDays" id="numDays" placeholder="e.g. 10"
-                                                    value={this.state.numDays} onChange={this.handleInputChange} />                                                                        
-                        </div>  
+                                    ref={this.ref_numDays} onChange={this.handleInputChange} /> 
+                        </div>                                                                       
 
                         {/* ====================================================================================== */}
 
                         <div className="grid-closedVialWastage-container">
+
                             <div className="grid-closedVialWastageCheckbox">     
                                 <label htmlFor="closedVialWastageCheckbox">
                                     <input type="checkbox" name="closedVialWastageCheckbox" id="closedVialWastageCheckbox" 
-                                            value={this.state.closedVialWastageCheckbox} onChange={this.handleInputChange} />                         
+                                            ref={this.ref_closedVialWastageCheckbox} 
+                                            
+                                            onClick={this.handleInputChange} />                         
                                     &nbsp;Include closed vial wastage?
                                 </label>                                                                       
                             </div>  
@@ -300,7 +331,7 @@ class Home extends Component {
                             </div>
                             <div  className="grid-closedVialWastageInputText">
                                 <input type="text" name="closedVialWastage" id="closedVialWastage" placeholder="e.g. 1"
-                                       value={this.state.closedVialWastage} onChange={this.handleInputChange}
+                                       ref={this.ref_closedVialWastage} onChange={this.handleInputChange}
                                        disabled={!this.state.closedVialWastageCheckbox} />   
                             </div>                                                                    
                                                     
@@ -310,7 +341,7 @@ class Home extends Component {
                             </div>
                             <div className="grid-numStorageLevels"> 
                                 <input type="text" name="numStorageLevels" id="numStorageLevels" placeholder="e.g. 3"
-                                       value={this.state.numStorageLevels} onChange={this.handleInputChange}
+                                       ref={this.ref_numStorageLevels} onChange={this.handleInputChange}
                                        disabled={!this.state.closedVialWastageCheckbox} />                                                                        
                             </div>  
                         </div>                                              
@@ -318,10 +349,12 @@ class Home extends Component {
                         {/* ====================================================================================== */}
 
                         <div className="grid-openedVialWastage-container">
+
                             <div className="grid-openedVialWastageCheckbox">     
                                 <label htmlFor="openedVialWastageCheckbox">
                                     <input type="checkbox" name="openedVialWastageCheckbox" id="openedVialWastageCheckbox" 
-                                            value={this.state.openedVialWastageCheckbox} onChange={this.handleInputChange} />                         
+                                            ref={this.ref_openedVialWastageCheckbox}
+                                            onClick={this.handleInputChange} />                         
                                     &nbsp;Include avoidable opened vial wastage?
                                 </label>                                                                       
                             </div>   
@@ -332,7 +365,7 @@ class Home extends Component {
                             </div>
                             <div className="grid-openedVialWastageInputText">
                                 <input type="text" name="openedVialWastage" id="openedVialWastage" placeholder="e.g. 5"
-                                       value={this.state.openedVialWastage} onChange={this.handleInputChange}
+                                       ref={this.ref_openedVialWastage} onChange={this.handleInputChange}
                                        disabled={!this.state.openedVialWastageCheckbox} />                                                                        
                             </div> 
                         </div>  

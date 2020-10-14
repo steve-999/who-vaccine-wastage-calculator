@@ -16,9 +16,19 @@
 }
 
 @media screen and (max-width: 767px) {
-    /* medium tablet styles */
-
     .logo {
         font-size: 17px;
+    }
+}
+
+@media screen and (max-width: 479px) { 
+    .logo {
+        font-size: 14px;
+    }
+}
+
+@media screen and (max-width: 359px) { 
+    .logo {
+        font-size: 12.5px;
     }
 }
